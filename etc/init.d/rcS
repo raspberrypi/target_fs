@@ -1,0 +1,34 @@
+#! /bin/sh
+
+/bin/mount -a
+
+echo /sbin/mdev >/proc/sys/kernel/hotplug
+#/sbin/mdev -s
+
+/sbin/syslogd -C # circular buffer - use logread to read
+/sbin/klogd      # log kernel messages - also available in dmesg
+
+# load kernel modules listed in /etc/modules
+if [ -r /etc/modules ]; then
+    while read mod; do
+        modprobe $mod
+    done </etc/modules
+fi
+
+# create vchiq device
+[ -x /etc/init.d/vchiq ] && /etc/init.d/vchiq start
+echo
+echo Greetings from standalone Raspberry Pi
+echo
+
+if [ -f /proc/cmdline -a -x /usr/local/bin/rpitestmode.sh ]; then
+    if grep rpitestmode /proc/cmdline>/dev/null; then
+        # wait for USB ennumeration to finish - otherwise test will fail
+        sleep 3
+        /usr/local/bin/rpitestmode.sh
+    fi
+fi
+
+# use an artificial SysRq-g to interrupt
+# echo Attempting to enter the debugger! ....
+# echo g > /proc/sysrq-trigger

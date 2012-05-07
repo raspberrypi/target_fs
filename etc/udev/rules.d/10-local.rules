@@ -1,0 +1,2 @@
+SUBSYSTEM=="vchiq", MODE="0777"
+SUBSYSTEM=="input", MODE="0777"

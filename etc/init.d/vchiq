@@ -1,0 +1,43 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          vchiq
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: Creates /dev/vchiq.
+# Description        Searches /proc/devices for the vchiq device, and then
+#                    creates /dev/vchiq using the found major device number.
+#                    It is called from the boot script.
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+if ! type log_action_begin_msg > /dev/null 2>&1; then
+    log_action_begin_msg() { echo "$@"; }
+fi
+
+case "$1" in
+  start|restart|reload|force-reload|"")
+        [ "$VERBOSE" = no ] || log_action_begin_msg "Creating vchiq device node"
+        rm -f /dev/vchiq
+        major=$(awk "\$2==\"vchiq\" {print \$1}" /proc/devices)
+        if [ -z "$major" ]; then
+            echo "Error: failed to locate vchiq device in /proc/devices"
+            exit 1
+        else
+            mknod /dev/vchiq c "$major" 0
+            chmod a+w /dev/vchiq
+        fi
+        ;;
+  stop)
+        echo "Error: argument '$1' not supported" >&2
+        exit 3
+        ;;
+  *)
+        echo "Usage: vchiq start|stop" >&2
+        exit 3
+        ;;
+esac
+
+:
